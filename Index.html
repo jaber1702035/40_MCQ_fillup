@@ -3,14 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5bea">
 <title>OMR Answer Sheet – 40 MCQ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📝%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f4f6fa;--card:#fff;--text:#1b2230;--muted:#667085;--line:#d9dfe9;--accent:#2f5bea;--soft:#e8eeff;--ok:#1a8f4c;--bad:#c93a3a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11151b;--card:#1a202a;--text:#e8ecf2;--muted:#9aa4b5;--line:#2b3340;--accent:#7b9bff;--soft:#222c4a;--ok:#4cc58a;--bad:#ef7777;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#11151b;--card:#1a202a;--text:#e8ecf2;--muted:#9aa4b5;--line:#2b3340;--accent:#7b9bff;--soft:#222c4a;--ok:#4cc58a;--bad:#ef7777;color-scheme:dark}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Bengali",Roboto,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Bengali","Nirmala UI",Roboto,sans-serif}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--card);z-index:10}
 .wrap{max-width:900px;margin:0 auto;padding:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
@@ -20,8 +25,8 @@ label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px}
 input[type=text]{width:100%;font:inherit;padding:11px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--text)}
 input[type=text]:focus{outline:none;border-color:var(--accent)}
 .err{color:var(--bad);font-size:13px;min-height:18px;margin:8px 0 0}
-button.b{font:inherit;padding:11px 20px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--text);cursor:pointer}
-button.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.b,a.b{display:inline-block;text-decoration:none;font:inherit;padding:11px 20px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--text);cursor:pointer}
+button.p,a.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 button.b:disabled{opacity:.5;cursor:default}
 .hidden{display:none!important}
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
@@ -45,6 +50,7 @@ button.b:disabled{opacity:.5;cursor:default}
 .mbox h2{margin:0 0 8px;font-size:18px}
 .mbtn{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
 .done{text-align:center}
+.done .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .tick{width:64px;height:64px;border-radius:50%;background:var(--ok);color:#fff;font-size:34px;display:grid;place-items:center;margin:0 auto 12px}
 .theme{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;z-index:6}
 </style>
@@ -82,7 +88,10 @@ button.b:disabled{opacity:.5;cursor:default}
     <div class="tick">✓</div>
     <h1>Answer script ready</h1>
     <p class="sub" id="doneMsg"></p>
-    <button class="b p" id="again">Download PDF again</button>
+    <div class="acts">
+      <button class="b p" id="again">Download PDF again</button>
+      <a class="b hidden" id="openLink" target="_blank" rel="noopener">Open PDF</a>
+    </div>
   </div>
 </div>
 
@@ -98,11 +107,17 @@ button.b:disabled{opacity:.5;cursor:default}
 </div>
 <button class="theme" id="theme" title="Toggle theme">◐</button>
 
+<!-- jsPDF (cdnjs first, jsDelivr as fallback) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+if(!window.jspdf){
+  document.write('<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"><\/script>');
+}
+</script>
 <script>
 const N=40, L=['A','B','C','D'];
 const ans=Array(N).fill(-1);
-let info={name:'',roll:''}, lastBlob=null, lastName='';
+let info={name:'',roll:''}, lastBlob=null, lastName='', lastUrl=null;
 const $=id=>document.getElementById(id);
 
 // Build sheet
@@ -160,7 +175,7 @@ $('again').onclick=()=>saveFile();
 function drawCanvas(){
   const W=1240,H=1754,c=document.createElement('canvas');c.width=W;c.height=H;
   const g=c.getContext('2d');
-  const F='"Noto Sans Bengali","Segoe UI",system-ui,-apple-system,Arial,sans-serif';
+  const F='"Noto Sans Bengali","Nirmala UI","Segoe UI",system-ui,-apple-system,Arial,sans-serif';
   g.fillStyle='#fff';g.fillRect(0,0,W,H);
   g.fillStyle='#111';g.textBaseline='middle';
   g.strokeStyle='#111';g.lineWidth=3;g.strokeRect(50,50,W-100,H-100);
@@ -196,7 +211,17 @@ function drawCanvas(){
   g.fillText('Generated from the online OMR sheet',W/2,H-80);
   return c;
 }
+
 async function makeAndSave(){
+  // Make sure the Bengali font is loaded before drawing the canvas
+  try{
+    if(document.fonts&&document.fonts.load){
+      await Promise.all([
+        document.fonts.load('600 30px "Noto Sans Bengali"',info.name),
+        document.fonts.load('30px "Noto Sans Bengali"',info.name)
+      ]);
+    }
+  }catch(e){}
   const c=drawCanvas();
   const base='OMR_'+(info.roll.replace(/[^A-Za-z0-9_-]+/g,'_').replace(/^_+|_+$/g,'')||'student');
   try{
@@ -211,22 +236,29 @@ async function makeAndSave(){
   }catch(e){
     lastBlob=await new Promise(r=>c.toBlob(r,'image/png'));lastName=base+'.png';
   }
+  if(lastUrl)URL.revokeObjectURL(lastUrl);
+  lastUrl=URL.createObjectURL(lastBlob);
+  const ol=$('openLink');ol.href=lastUrl;ol.textContent='Open '+(lastName.endsWith('.pdf')?'PDF':'image');ol.classList.remove('hidden');
   $('s2').classList.add('hidden');$('s3').classList.remove('hidden');
   window.scrollTo(0,0);
-  await saveFile();
+  saveFile();
 }
-async function saveFile(){
+
+// Standard browser download (works on GitHub Pages)
+function saveFile(){
   const msg=$('doneMsg');
-  let dl=null;
-  try{dl=await claude.use('downloads')}catch(e){}
-  if(!dl){msg.textContent='Saving files isn’t available in this view. Please open the link in the Claude app or browser and try again.';return}
   try{
-    await dl.save({filename:lastName,data:lastBlob});
-    msg.textContent='Your PDF ('+lastName+') was saved. Send it to your teacher.';
+    // Mobile: use the share sheet if files can be shared, else fall back to a normal download
+    const a=document.createElement('a');
+    a.href=lastUrl;a.download=lastName;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>a.remove(),500);
+    msg.textContent='Your file ('+lastName+') is downloading. If nothing happened, tap “Open” below and save it from there. Then send it to your teacher.';
   }catch(e){
-    msg.textContent=(e&&e.code==='declined')?'Download cancelled. Tap the button below to try again.':'Couldn’t save the file. Tap the button below to try again.';
+    msg.textContent='Couldn’t start the download automatically. Tap “Open” below and save the file from there.';
   }
 }
+
 $('theme').onclick=()=>{
   const r=document.documentElement,dark=matchMedia('(prefers-color-scheme:dark)').matches;
   const cur=r.dataset.theme||(dark?'dark':'light');r.dataset.theme=cur==='dark'?'light':'dark';
